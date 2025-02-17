@@ -1,1 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<title>Go WebSocket Chat Server</title>
 <h1>index.html</h1>
+<script type="text/javascript">
+window.onload = function () {
+    if (window["WebSocket"]) {
+        // TODO: wss secure websocket connection
+        conn = new WebSocket("ws://" + document.location.host + "/join");
+        conn.onopen = function (evt) {
+            console.log("ws conn open");
+        }
+    }
+}
+</script>
+</html>
