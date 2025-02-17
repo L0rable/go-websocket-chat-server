@@ -6,6 +6,12 @@ import (
 )
 
 func serveIndex(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.Error(w, "URL not found", http.StatusNotFound)
+	}
+	if r.Method != http.MethodGet {
+		http.Error(w, "HTTP method not allowed", http.StatusMethodNotAllowed)
+	}
 	http.ServeFile(w, r, "index.html")
 }
 
