@@ -9,7 +9,11 @@ window.onload = function () {
         conn = new WebSocket("ws://" + document.location.host + "/join");
         conn.onopen = function (evt) {
             console.log("ws conn open");
-        }
+        };
+        conn.onclose = function (evt) {
+            console.log("ws conn close");
+            WebSocket.close();
+        };
     }
 }
 </script>

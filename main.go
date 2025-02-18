@@ -21,7 +21,7 @@ func main() {
 
 	http.HandleFunc("/", serveIndex)
 	http.HandleFunc("/join", func(wr http.ResponseWriter, req *http.Request) {
-		wsRequest(room, wr, req)
+		openWsReq(room, wr, req)
 	})
 
 	err := http.ListenAndServe(":8080", nil)

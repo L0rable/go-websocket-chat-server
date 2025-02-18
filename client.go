@@ -18,7 +18,21 @@ type Client struct {
 	sendBuff chan []byte
 }
 
-func wsRequest(room *Room, w http.ResponseWriter, r *http.Request) {
+func (c *Client) readPump() {
+	defer func() {
+		c.roomConn.Close()
+		c.room.leave <- c
+	}()
+
+	for {
+		_, _, err := c.roomConn.ReadMessage()
+		if err != nil {
+			break
+		}
+	}
+}
+
+func openWsReq(room *Room, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal("upgrade err ", err)
@@ -26,4 +40,6 @@ func wsRequest(room *Room, w http.ResponseWriter, r *http.Request) {
 
 	client := &Client{room: room, roomConn: conn, sendBuff: make(chan []byte, 128)}
 	client.room.join <- client
+
+	go client.readPump()
 }

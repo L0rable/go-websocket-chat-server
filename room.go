@@ -26,9 +26,19 @@ func newRoom() *Room {
 }
 
 func (room *Room) run() {
-	select {
-	case clientJoin := <-room.join:
-		log.Println("client join")
-		room.clients[clientJoin] = true
+	for {
+		select {
+		case clientJoin := <-room.join:
+			log.Println("client join")
+			room.clients[clientJoin] = true
+
+		case clientLeave := <-room.leave:
+			_, clientExists := room.clients[clientLeave]
+			if clientExists {
+				log.Println("client ", clientLeave)
+				delete(room.clients, clientLeave)
+				close(clientLeave.sendBuff)
+			}
+		}
 	}
 }
