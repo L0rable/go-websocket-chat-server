@@ -1,6 +1,8 @@
 package main
 
-import "log"
+import (
+	"log"
+)
 
 type Room struct {
 	// map (hash table), key pointer to client and value is bool
@@ -38,6 +40,18 @@ func (room *Room) run() {
 				log.Println("client ", clientLeave)
 				delete(room.clients, clientLeave)
 				close(clientLeave.sendBuff)
+			}
+
+		case msg := <-room.broadcast:
+			room.messages = append(room.messages, msg)
+			log.Println(string(msg))
+			for client := range room.clients {
+				select {
+				case client.sendBuff <- msg:
+				default:
+					close(client.sendBuff)
+					delete(room.clients, client)
+				}
 			}
 		}
 	}

@@ -25,9 +25,30 @@ func (c *Client) readPump() {
 	}()
 
 	for {
-		_, _, err := c.roomConn.ReadMessage()
+		_, msg, err := c.roomConn.ReadMessage()
 		if err != nil {
 			break
+		}
+		c.room.broadcast <- msg
+	}
+}
+
+func (c *Client) writePump() {
+	for message := range c.sendBuff {
+		w, err := c.roomConn.NextWriter(websocket.TextMessage)
+		if err != nil {
+			return
+		}
+		// log.Println(string(message))
+		w.Write(message)
+
+		n := len(c.sendBuff)
+		for i := 0; i < n; i++ {
+			w.Write(<-c.sendBuff)
+		}
+
+		if err := w.Close(); err != nil {
+			return
 		}
 	}
 }
@@ -41,5 +62,10 @@ func openWsReq(room *Room, w http.ResponseWriter, r *http.Request) {
 	client := &Client{room: room, roomConn: conn, sendBuff: make(chan []byte, 128)}
 	client.room.join <- client
 
+	for _, msg := range room.messages {
+		conn.WriteMessage(websocket.TextMessage, msg)
+	}
+
 	go client.readPump()
+	go client.writePump()
 }

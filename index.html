@@ -1,20 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
 <title>Go WebSocket Chat Server</title>
-<h1>index.html</h1>
 <script type="text/javascript">
 window.onload = function () {
+    var conn;
+    var msg = document.getElementById("msg");
+    var msgLog = document.getElementById("msg-log");
+
+    document.getElementById("msg-send-form").onsubmit = function () {
+        if (!conn) {
+            return false;
+        }
+        if (!msg.value) {
+            return false;
+        }
+        conn.send(msg.value);
+        msg.value = "";
+    };
+
     if (window["WebSocket"]) {
         // TODO: wss secure websocket connection
         conn = new WebSocket("ws://" + document.location.host + "/join");
         conn.onopen = function (evt) {
             console.log("ws conn open");
+            if (!evt.data) {
+                return;
+            }
+            
+            var msgs = evt.data.split('\n');
+            console.logs(msgs);
+            for (var i = 0; i < msgs.length; i++) {
+                var msgText = document.createElement("div");
+                msgText.innerText = msg;
+                msgLog.appendChild(msgText)
+            }
         };
+
         conn.onclose = function (evt) {
             console.log("ws conn close");
             WebSocket.close();
+            var msgText = document.createElement("div");
+            msgText.innerHTML = "<b>Connection closed.</b>";
+            msgLog.appendChild(msgText)
         };
+
+        conn.onmessage = function (evt) {
+            if (!evt.data) {
+                return;
+            }
+
+            var msgs = evt.data.split('\n');
+            console.log(msgs);
+            for (var i = 0; i < msgs.length; i++) {
+                var msgText = document.createElement("div");
+                msgText.innerText = msgs[i];
+                msgLog.appendChild(msgText);
+            }
+        };
+
+    } else {
+        var msgText = document.createElement("div");
+        msgText.innerHTML = "<b>Your browser does not support WebSockets.</b>";
+        msgLog.appendChild(item);
     }
-}
+};
 </script>
+<style type="text/css">
+html {
+    overflow: hidden;
+}
+
+body {
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: gray;
+}
+
+#msg-log {
+    background: white;
+    margin: 0;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+    position: absolute;
+    top: 0.5em;
+    left: 0.5em;
+    right: 0.5em;
+    bottom: 3em;
+    overflow: auto;
+}
+
+#msg-send-form {
+    padding: 0 0.5em 0 0.5em;
+    margin: 0;
+    position: absolute;
+    bottom: 1em;
+    left: 0px;
+    width: 100%;
+    overflow: hidden;
+}
+
+</style>
+</head>
+<body>
+<div id="msg-log"></div>
+<form id="msg-send-form">
+    <input type="submit" value="Send" />
+    <input type="text" id="msg" size="64" autofocus />
+</form>
+</body>
 </html>
