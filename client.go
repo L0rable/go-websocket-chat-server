@@ -4,12 +4,14 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{}
 
 type Client struct {
+	id string
 	// ref to connected room
 	room *Room
 	// client websocket connection to room
@@ -29,7 +31,7 @@ func (c *Client) readPump() {
 		if err != nil {
 			break
 		}
-		c.room.broadcast <- msg
+		c.room.broadcast <- &Message{clientId: c.id, text: string(msg)}
 	}
 }
 
@@ -59,12 +61,13 @@ func openWsReq(room *Room, w http.ResponseWriter, r *http.Request) {
 		log.Fatal("upgrade err ", err)
 	}
 
-	client := &Client{room: room, roomConn: conn, sendBuff: make(chan []byte, 128)}
+	id := uuid.New()
+	client := &Client{id: id.String(), room: room, roomConn: conn, sendBuff: make(chan []byte, 256)}
 	client.room.join <- client
 
-	for _, msg := range room.messages {
-		conn.WriteMessage(websocket.TextMessage, msg)
-	}
+	/*for _, msg := range room.messages {
+		conn.WriteMessage(websocket.TextMessage, []byte(msg.Text))
+	}*/
 
 	go client.readPump()
 	go client.writePump()

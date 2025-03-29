@@ -12,9 +12,14 @@ type Room struct {
 	// buffer to handle client leave
 	leave chan *Client
 	// byte slice for incoming client broadcasts
-	broadcast chan []byte
-	// 2D byte slice to hold the message history
-	messages [][]byte
+	broadcast chan *Message
+	// slice to hold the message history
+	messages []*Message
+}
+
+type Message struct {
+	clientId string
+	text     string
 }
 
 func newRoom() *Room {
@@ -22,8 +27,7 @@ func newRoom() *Room {
 		clients:   make(map[*Client]bool),
 		join:      make(chan *Client),
 		leave:     make(chan *Client),
-		broadcast: make(chan []byte),
-		messages:  make([][]byte, 0),
+		broadcast: make(chan *Message),
 	}
 }
 
@@ -33,7 +37,9 @@ func (room *Room) run() {
 		case clientJoin := <-room.join:
 			log.Println("client join")
 			room.clients[clientJoin] = true
-
+			for _, msg := range room.messages {
+				clientJoin.sendBuff <- []byte(msg.clientId + ": " + msg.text + "\n")
+			}
 		case clientLeave := <-room.leave:
 			_, clientExists := room.clients[clientLeave]
 			if clientExists {
@@ -44,10 +50,10 @@ func (room *Room) run() {
 
 		case msg := <-room.broadcast:
 			room.messages = append(room.messages, msg)
-			log.Println(string(msg))
+			log.Println(msg.text)
 			for client := range room.clients {
 				select {
-				case client.sendBuff <- msg:
+				case client.sendBuff <- []byte(msg.clientId + ": " + msg.text + "\n"):
 				default:
 					close(client.sendBuff)
 					delete(room.clients, client)

@@ -17,11 +17,12 @@ window.onload = function () {
         }
         conn.send(msg.value);
         msg.value = "";
+        return false;
     };
 
     if (window["WebSocket"]) {
         // TODO: wss secure websocket connection
-        conn = new WebSocket("ws://" + document.location.host + "/join");
+        conn = new WebSocket("ws://" + document.location.host + "/ws");
         conn.onopen = function (evt) {
             console.log("ws conn open");
             if (!evt.data) {

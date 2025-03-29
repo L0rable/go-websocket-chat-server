@@ -20,7 +20,7 @@ func main() {
 	go room.run()
 
 	http.HandleFunc("/", serveIndex)
-	http.HandleFunc("/join", func(wr http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("/ws", func(wr http.ResponseWriter, req *http.Request) {
 		openWsReq(room, wr, req)
 	})
 
