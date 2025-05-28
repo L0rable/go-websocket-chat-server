@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 )
 
@@ -18,8 +19,8 @@ type Room struct {
 }
 
 type Message struct {
-	clientId string
-	text     string
+	ClientId string `json:"clientId"`
+	Text     string `json:"text"`
 }
 
 func newRoom() *Room {
@@ -37,9 +38,11 @@ func (room *Room) run() {
 		case clientJoin := <-room.join:
 			log.Println("client join")
 			room.clients[clientJoin] = true
-			for _, msg := range room.messages {
-				clientJoin.sendBuff <- []byte(msg.clientId + ": " + msg.text + "\n")
+			msgs, err := json.Marshal(room.messages)
+			if err != nil {
+				log.Println("room.run() case clientJoin, data: ", err)
 			}
+			clientJoin.sendBuff <- msgs
 		case clientLeave := <-room.leave:
 			_, clientExists := room.clients[clientLeave]
 			if clientExists {
@@ -50,10 +53,13 @@ func (room *Room) run() {
 
 		case msg := <-room.broadcast:
 			room.messages = append(room.messages, msg)
-			log.Println(msg.text)
+			msgJson, err := json.Marshal(msg)
+			if err != nil {
+				log.Println("room.run() case room.broadcast, data: ", err)
+			}
 			for client := range room.clients {
 				select {
-				case client.sendBuff <- []byte(msg.clientId + ": " + msg.text + "\n"):
+				case client.sendBuff <- msgJson:
 				default:
 					close(client.sendBuff)
 					delete(room.clients, client)

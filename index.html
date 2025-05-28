@@ -25,16 +25,8 @@ window.onload = function () {
         conn = new WebSocket("ws://" + document.location.host + "/ws");
         conn.onopen = function (evt) {
             console.log("ws conn open");
-            if (!evt.data) {
+            if (evt.data == 'null') {
                 return;
-            }
-            
-            var msgs = evt.data.split('\n');
-            console.logs(msgs);
-            for (var i = 0; i < msgs.length; i++) {
-                var msgText = document.createElement("div");
-                msgText.innerText = msg;
-                msgLog.appendChild(msgText)
             }
         };
 
@@ -47,17 +39,22 @@ window.onload = function () {
         };
 
         conn.onmessage = function (evt) {
-            if (!evt.data) {
+            if (evt.data == 'null') {
                 return;
             }
 
-            var msgs = evt.data.split('\n');
-            console.log(msgs);
-            for (var i = 0; i < msgs.length; i++) {
-                var msgText = document.createElement("div");
-                msgText.innerText = msgs[i];
-                msgLog.appendChild(msgText);
+            var msgs = evt.data;
+            var msgsJSON = JSON.parse(msgs);
+            if (!Array.isArray(msgsJSON)) {
+                msgsJSON = [msgsJSON];
             }
+            msgsJSON.forEach(msgJSON => {
+                const id = msgJSON.clientId;
+                const text = msgJSON.text;
+                var msgText = document.createElement("div");
+                msgText.innerText = `${id}: ${text}`;
+                msgLog.appendChild(msgText);
+            });
         };
 
     } else {
