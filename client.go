@@ -11,7 +11,8 @@ import (
 var upgrader = websocket.Upgrader{}
 
 type Client struct {
-	id string
+	id   string
+	name string
 	// ref to connected room
 	room *Room
 	// client websocket connection to room
@@ -21,54 +22,72 @@ type Client struct {
 }
 
 func (c *Client) readPump() {
-	defer func() {
-		c.roomConn.Close()
-		c.room.leave <- c
-	}()
+	if c.room != nil {
+		defer func() {
+			c.room = nil
+			c.roomConn.Close()
+			c.room.leave <- c
+		}()
 
-	for {
-		_, msg, err := c.roomConn.ReadMessage()
-		if err != nil {
-			break
+		for {
+			_, msg, err := c.roomConn.ReadMessage()
+			if err != nil {
+				break
+			}
+			c.room.broadcast <- &Message{ClientId: c.id, Text: string(msg)}
 		}
-		c.room.broadcast <- &Message{ClientId: c.id, Text: string(msg)}
 	}
 }
 
 func (c *Client) writePump() {
-	for message := range c.sendBuff {
-		w, err := c.roomConn.NextWriter(websocket.TextMessage)
-		if err != nil {
-			return
-		}
-		// log.Println(string(message))
-		w.Write(message)
+	if c.room != nil {
+		for message := range c.sendBuff {
+			w, err := c.roomConn.NextWriter(websocket.TextMessage)
+			if err != nil {
+				return
+			}
+			// log.Println(string(message))
+			w.Write(message)
 
-		n := len(c.sendBuff)
-		for i := 0; i < n; i++ {
-			w.Write(<-c.sendBuff)
-		}
+			n := len(c.sendBuff)
+			for i := 0; i < n; i++ {
+				w.Write(<-c.sendBuff)
+			}
 
-		if err := w.Close(); err != nil {
-			return
+			if err := w.Close(); err != nil {
+				return
+			}
 		}
 	}
 }
 
-func openWsReq(room *Room, w http.ResponseWriter, r *http.Request) {
+/*func openWsReq(wRoom *WaitingRoom, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal("upgrade err ", err)
 	}
 
 	id := uuid.New()
-	client := &Client{id: id.String(), room: room, roomConn: conn, sendBuff: make(chan []byte, 256)}
+	client := &Client{id: id.String(), name: "", room: nil, roomConn: conn, sendBuff: make(chan []byte, 256)}
 	client.room.join <- client
 
-	/*for _, msg := range room.messages {
-		conn.WriteMessage(websocket.TextMessage, []byte(msg.Text))
-	}*/
-
+	go client.waiting(wRoom)
 	go client.readPump()
 	go client.writePump()
+}*/
+
+func newClient(w http.ResponseWriter, r *http.Request, wRoom *WaitingRoom, joinMsg *JoinReq) {
+	id := uuid.New()
+	clientName := joinMsg.ClientName
+	roomNo := joinMsg.Room
+	client := &Client{id: id.String(), name: clientName, room: nil, roomConn: nil, sendBuff: make(chan []byte, 256)}
+
+	log.Println(joinMsg)
+
+	if clientName == "" || roomNo == 0 {
+		log.Println("Invalid client join req")
+		return
+	}
+
+	wRoom.joinRoom <- &JoinRoom{client, roomNo}
 }

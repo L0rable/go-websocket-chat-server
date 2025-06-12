@@ -2,6 +2,42 @@
 <html lang="en">
 <head>
 <title>Landing Page</title>
+<script type="text/javascript">
+window.onload = function () {
+    var name = document.getElementById("user-name");
+    var room = document.getElementById("chat-room-no");
+
+    document.getElementById("room-join-form").onsubmit = async function() {
+        if (!name.value || !room.value) {
+            return false;
+        }
+        const joinReqData = JSON.stringify({
+            clientName: name.value,
+            room: Number(room.value) 
+        });
+
+        try {
+            const joinReq = await fetch("/join", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: joinReqData
+            });
+
+            if (!joinReq.ok) {
+                throw new Error("Failed to join chat room");
+            }
+
+            window.location.href = "/ws";
+        } catch (err) {
+            console.error("Error:", err);
+        }
+
+        return false;
+    };
+};
+</script>
 <style type="text/css">
 html, body {
     height: 100%;
@@ -71,16 +107,16 @@ html, body {
 <form id="room-join-form" class="room-join-container">
     <div class="form-input">
         <label>Name:
-            <input type="text" id="user-name" />
+            <input id="user-name" type="text" />
         </label>
     </div>
     <div class="form-input">
         <label>Room No:
-            <input type="text" id="chat-room" />
+            <input id="chat-room-no" type="number" />
         </label>
     </div>
     <div class="form-submit">
-        <input type="submit" id="chat-room" value="Send" />
+        <input type="submit" value="Send" />
     </div>
 </form>
 </body>
