@@ -53,10 +53,10 @@ window.onload = function () {
                 msgsJSON = [msgsJSON];
             }
             msgsJSON.forEach(msgJSON => {
-                const id = msgJSON.clientId;
+                const clientName = msgJSON.clientName;
                 const text = msgJSON.text;
                 var msgText = document.createElement("div");
-                msgText.innerText = `${id}: ${text}`;
+                msgText.innerText = `${clientName}: ${text}`;
                 msgLog.appendChild(msgText);
             });
         };

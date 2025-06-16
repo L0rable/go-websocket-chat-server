@@ -42,7 +42,7 @@ func (c *Client) readPump() {
 			if err != nil {
 				break
 			}
-			c.room.broadcast <- &Message{ClientId: c.id, Text: string(msg)}
+			c.room.broadcast <- &Message{ClientName: c.name, Text: string(msg)}
 		}
 	}
 }

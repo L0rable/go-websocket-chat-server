@@ -21,8 +21,8 @@ type Room struct {
 }
 
 type Message struct {
-	ClientId string `json:"clientId"`
-	Text     string `json:"text"`
+	ClientName string `json:"clientName"`
+	Text       string `json:"text"`
 }
 
 func newRoom(roomNo int) *Room {
