@@ -37,12 +37,10 @@ func (wRoom *WaitingRoom) newJoin(w http.ResponseWriter, r *http.Request, conn *
 	clientName := joinReq.ClientName
 	roomNo := joinReq.Room
 	if clientName == "" || roomNo == 0 {
-		log.Fatal("client.go - Invalid client join req")
-		return
+		log.Fatal("Invalid client join req (client.go, newJoin())")
 	}
 
 	newRoom := newRoom(roomNo)
-	log.Println(&newRoom.id)
 	newClient := newClient(clientName, newRoom, conn)
 	wRoom.joinRoom <- &JoinRoom{newClient, newRoom}
 }

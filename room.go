@@ -39,18 +39,18 @@ func (room *Room) run() {
 	for {
 		select {
 		case clientJoin := <-room.join:
-			log.Println("client join")
+			log.Println("client join: ", clientJoin.name)
 			room.clients[clientJoin] = true
 			msgs, err := json.Marshal(room.messages)
 			if err != nil {
-				log.Fatal("room.run() case clientJoin, json.Marshal: ", err)
+				log.Fatal("Error, json.Marshal: ", err, " (room.go, run())")
 			}
 			clientJoin.sendBuff <- msgs
 
 		case clientLeave := <-room.leave:
 			_, clientExists := room.clients[clientLeave]
 			if clientExists {
-				log.Println("client ", clientLeave)
+				log.Println("client leave: ", clientLeave.name)
 				delete(room.clients, clientLeave)
 				close(clientLeave.sendBuff)
 			}
@@ -59,7 +59,7 @@ func (room *Room) run() {
 			room.messages = append(room.messages, msg)
 			msgJson, err := json.Marshal(msg)
 			if err != nil {
-				log.Println("room.run() case room.broadcast, data: ", err)
+				log.Println("Error, json.Marshal: ", err, " (room.go, run())")
 			}
 			for client := range room.clients {
 				select {

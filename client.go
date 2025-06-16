@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
@@ -52,7 +54,7 @@ func (c *Client) writePump() {
 			}
 
 			if err := w.Close(); err != nil {
-				return
+				log.Fatal("Error, w.Close(): ", err, " (client.go, writePump())")
 			}
 		}
 	}
@@ -60,7 +62,13 @@ func (c *Client) writePump() {
 
 func newClient(clientName string, room *Room, conn *websocket.Conn) *Client {
 	id := uuid.New()
-	client := &Client{id: id.String(), name: clientName, room: room, roomConn: conn, sendBuff: make(chan []byte, 256)}
+	client := &Client{
+		id:       id.String(),
+		name:     clientName,
+		room:     room,
+		roomConn: conn,
+		sendBuff: make(chan []byte, 256),
+	}
 
 	go client.readPump()
 	go client.writePump()

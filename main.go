@@ -11,9 +11,11 @@ import (
 func serveIndex(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.Error(w, "URL not found", http.StatusNotFound)
+		log.Fatal("URL not found: ", r.URL.Path, " (main.go, serveIndex()")
 	}
 	if r.Method != http.MethodGet {
 		http.Error(w, "HTTP method not allowed", http.StatusMethodNotAllowed)
+		log.Fatal("HTTP method not allowed: ", r.Method, " (main.go, serveIndex()")
 	}
 	http.ServeFile(w, r, "landing.html")
 }
@@ -21,9 +23,11 @@ func serveIndex(w http.ResponseWriter, r *http.Request) {
 func serveRoom(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/room" {
 		http.Error(w, "URL not found", http.StatusNotFound)
+		log.Fatal("URL not found: ", r.URL.Path, " (main.go, serveIndex()")
 	}
 	if r.Method != http.MethodGet {
 		http.Error(w, "HTTP method not allowed", http.StatusMethodNotAllowed)
+		log.Fatal("HTTP method not allowed: ", r.Method, " (main.go, serveRoom()")
 	}
 	http.ServeFile(w, r, "index.html")
 }
@@ -37,15 +41,14 @@ func main() {
 	http.HandleFunc("/ws", func(wr http.ResponseWriter, req *http.Request) {
 		conn, err := upgrader.Upgrade(wr, req, nil)
 		if err != nil {
-			log.Println("main.go - Websocket upgrade failed: ", err)
-			return
+			log.Fatal("Websocket upgrade failed: ", err, " (main.go, /ws)")
 		}
 
 		clientName := req.URL.Query().Get("clientName")
 		roomNo := req.URL.Query().Get("roomNo")
 		roomNoInt, err := strconv.Atoi(roomNo)
 		if err != nil {
-			log.Println("main.go - roomNoInt error: ", err)
+			log.Fatal("roomNoInt error: ", err, " (main.go, /ws)")
 		}
 
 		joinReq := &JoinReq{ClientName: clientName, Room: roomNoInt}
@@ -57,7 +60,7 @@ func main() {
 		err := decoder.Decode(&joinReq)
 		if err != nil {
 			http.Error(wr, "Bad request", http.StatusBadRequest)
-			log.Fatal("main.go - Bad http request: ")
+			log.Fatal("Bad http request: ", err, " (main.go, /join)")
 		}
 
 		clientName := joinReq.ClientName
