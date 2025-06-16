@@ -1,116 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Go WebSocket Chat Server</title>
+<title>Landing Page</title>
 <script type="text/javascript">
 window.onload = function () {
-    var conn;
-    var msg = document.getElementById("msg");
-    var msgLog = document.getElementById("msg-log");
+    var conn
+    var name = document.getElementById("user-name");
+    var room = document.getElementById("chat-room-no");
 
-    document.getElementById("msg-send-form").onsubmit = function () {
-        if (!conn) {
+    document.getElementById("room-join-form").onsubmit = async function (e) {
+        e.preventDefault();
+        
+        if (!name.value || !room.value) {
             return false;
         }
-        if (!msg.value) {
-            return false;
+        const joinReqData = JSON.stringify({
+            clientName: name.value,
+            room: Number(room.value),
+        });
+
+        try {
+            const joinReq = await fetch('/join', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: joinReqData
+            });
+
+            if (!joinReq.ok) {
+                throw new Error("Failed to join chat room");
+            }
+
+            if (joinReq.redirected) {
+                window.location.href = joinReq.url;
+            }
+        } catch (err) {
+            console.error("Error:", err);
         }
-        conn.send(msg.value);
-        msg.value = "";
+
         return false;
     };
-
-    if (window["WebSocket"]) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const clientName = urlParams.get("clientName");
-        const roomNo = urlParams.get("roomNo");
-
-        // TODO: wss secure websocket connection
-        conn = new WebSocket(`ws://${window.location.host}/ws?clientName=${clientName}&roomNo=${roomNo}`);
-        conn.onopen = function (evt) {
-            console.log("ws conn open");
-            if (evt.data == 'null') {
-                return;
-            }
-        };
-
-        conn.onclose = function (evt) {
-            console.log("ws conn close");
-            WebSocket.close();
-            var msgText = document.createElement("div");
-            msgText.innerHTML = "<b>Connection closed.</b>";
-            msgLog.appendChild(msgText)
-        };
-
-        conn.onmessage = function (evt) {
-            if (evt.data == 'null') {
-                return;
-            }
-
-            var msgs = evt.data;
-            var msgsJSON = JSON.parse(msgs);
-            if (!Array.isArray(msgsJSON)) {
-                msgsJSON = [msgsJSON];
-            }
-            msgsJSON.forEach(msgJSON => {
-                const id = msgJSON.clientId;
-                const text = msgJSON.text;
-                var msgText = document.createElement("div");
-                msgText.innerText = `${id}: ${text}`;
-                msgLog.appendChild(msgText);
-            });
-        };
-
-    } else {
-        var msgText = document.createElement("div");
-        msgText.innerHTML = "<b>Your browser does not support WebSockets.</b>";
-        msgLog.appendChild(item);
-    }
 };
 </script>
 <style type="text/css">
-html {
-    overflow: hidden;
-}
-
-body {
-    overflow: hidden;
-    padding: 0;
-    margin: 0;
-    width: 100%;
+html, body {
     height: 100%;
-    background: gray;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: grey;
 }
 
-#msg-log {
-    background: white;
-    margin: 0;
-    padding: 0.5em 0.5em 0.5em 0.5em;
-    position: absolute;
-    top: 0.5em;
-    left: 0.5em;
-    right: 0.5em;
-    bottom: 3em;
-    overflow: auto;
+.user-info {
+    position: absolute; 
+    top: 0;
+    right: 0;
+
+    background-color: white;
+    border: 2px solid black;
+
+    padding: 20px;
+    margin: 16px;
+    border-radius: 4px;
+    width: 300px;
+
+    box-sizing: border-box;
 }
 
-#msg-send-form {
-    padding: 0 0.5em 0 0.5em;
-    margin: 0;
-    position: absolute;
-    bottom: 1em;
-    left: 0px;
+.room-join-container {
+    background-color: white;
+
+    padding: 20px;
+    width: 300px;
+    border: 2px solid black;
+    border-radius: 4px;
+}
+
+.form-input {
+    display: flex;
     width: 100%;
-    overflow: hidden;
+    margin-right: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.form-input label {
+    display: flex;   
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.form-input input {
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.form-submit {
+    margin-top: 0.5rem;
 }
 
 </style>
 </head>
 <body>
-<div id="msg-log"></div>
-<form id="msg-send-form">
-    <input type="submit" value="Send" />
-    <input type="text" id="msg" size="64" autofocus />
+<div class="user-info">
+    <p>Name:</p>
+    <p>UUID:</p>
+</div>
+<form id="room-join-form" class="room-join-container">
+    <div class="form-input">
+        <label>Name:
+            <input id="user-name" type="text" />
+        </label>
+    </div>
+    <div class="form-input">
+        <label>Room No:
+            <input id="chat-room-no" type="number" />
+        </label>
+    </div>
+    <div class="form-submit">
+        <input type="submit" value="Send" />
+    </div>
 </form>
 </body>
 </html>
