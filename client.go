@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -18,6 +19,14 @@ type Client struct {
 	roomConn *websocket.Conn
 	// message buffer channel, send to room
 	sendBuff chan []byte
+}
+
+func openWs(w http.ResponseWriter, r *http.Request) *websocket.Conn {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Fatal("Websocket upgrade failed: ", err, " (client.go, openWs())")
+	}
+	return conn
 }
 
 func (c *Client) readPump() {

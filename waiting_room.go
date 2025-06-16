@@ -3,8 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-
-	"github.com/gorilla/websocket"
 )
 
 type WaitingRoom struct {
@@ -33,13 +31,14 @@ func newWaitingRoom() *WaitingRoom {
 	}
 }
 
-func (wRoom *WaitingRoom) newJoin(w http.ResponseWriter, r *http.Request, conn *websocket.Conn, joinReq *JoinReq) {
+func (wRoom *WaitingRoom) newJoin(w http.ResponseWriter, r *http.Request, joinReq *JoinReq) {
 	clientName := joinReq.ClientName
 	roomNo := joinReq.Room
 	if clientName == "" || roomNo == 0 {
 		log.Fatal("Invalid client join req (client.go, newJoin())")
 	}
 
+	conn := openWs(w, r)
 	newRoom := newRoom(roomNo)
 	newClient := newClient(clientName, newRoom, conn)
 	wRoom.joinRoom <- &JoinRoom{newClient, newRoom}
