@@ -1,5 +1,12 @@
 package main
 
+import (
+	"log"
+	"net/http"
+
+	"github.com/gorilla/websocket"
+)
+
 type WaitingRoom struct {
 	clients   map[*Client]bool
 	rooms     map[*Room]bool
@@ -13,8 +20,8 @@ type JoinReq struct {
 }
 
 type JoinRoom struct {
-	Client *Client
-	RoomNo int
+	client *Client
+	room   *Room
 }
 
 func newWaitingRoom() *WaitingRoom {
@@ -26,16 +33,33 @@ func newWaitingRoom() *WaitingRoom {
 	}
 }
 
+func (wRoom *WaitingRoom) newJoin(w http.ResponseWriter, r *http.Request, conn *websocket.Conn, joinReq *JoinReq) {
+	clientName := joinReq.ClientName
+	roomNo := joinReq.Room
+	if clientName == "" || roomNo == 0 {
+		log.Fatal("client.go - Invalid client join req")
+		return
+	}
+
+	newRoom := newRoom(roomNo)
+	log.Println(&newRoom.id)
+	newClient := newClient(clientName, newRoom, conn)
+	wRoom.joinRoom <- &JoinRoom{newClient, newRoom}
+}
+
 func (wRoom *WaitingRoom) run() {
 	for {
 		select {
 		case join := <-wRoom.joinRoom:
 			// Currenly doesn't check if room exists
-			newRoom := newRoom()
+			newRoom := newRoom(join.room.id)
 			go newRoom.run()
+			log.Println("newRoom", newRoom.id)
 
-			join.Client.room = newRoom
-			newRoom.join <- join.Client
+			join.client.room = newRoom
+			newRoom.join <- join.client
+
+			log.Println("client", join.client.name)
 		}
 	}
 }

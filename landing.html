@@ -4,23 +4,26 @@
 <title>Landing Page</title>
 <script type="text/javascript">
 window.onload = function () {
+    var conn
     var name = document.getElementById("user-name");
     var room = document.getElementById("chat-room-no");
 
-    document.getElementById("room-join-form").onsubmit = async function() {
+    document.getElementById("room-join-form").onsubmit = async function (e) {
+        e.preventDefault();
+        
         if (!name.value || !room.value) {
             return false;
         }
         const joinReqData = JSON.stringify({
             clientName: name.value,
-            room: Number(room.value) 
+            room: Number(room.value),
         });
 
         try {
-            const joinReq = await fetch("/join", {
-                method: "POST",
+            const joinReq = await fetch('/join', {
+                method: 'POST',
                 headers: {
-                    "Content-Type": "application/json"
+                    'Content-Type': 'application/json'
                 },
                 body: joinReqData
             });
@@ -29,7 +32,9 @@ window.onload = function () {
                 throw new Error("Failed to join chat room");
             }
 
-            window.location.href = "/ws";
+            if (joinReq.redirected) {
+                window.location.href = joinReq.url;
+            }
         } catch (err) {
             console.error("Error:", err);
         }

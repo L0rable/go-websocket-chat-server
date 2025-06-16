@@ -6,6 +6,8 @@ import (
 )
 
 type Room struct {
+	// Room No
+	id int
 	// map (hash table), key pointer to client and value is bool
 	clients map[*Client]bool
 	// buffer to handle client join
@@ -23,8 +25,9 @@ type Message struct {
 	Text     string `json:"text"`
 }
 
-func newRoom() *Room {
+func newRoom(roomNo int) *Room {
 	return &Room{
+		id:        roomNo,
 		clients:   make(map[*Client]bool),
 		join:      make(chan *Client),
 		leave:     make(chan *Client),
@@ -40,9 +43,10 @@ func (room *Room) run() {
 			room.clients[clientJoin] = true
 			msgs, err := json.Marshal(room.messages)
 			if err != nil {
-				log.Println("room.run() case clientJoin, data: ", err)
+				log.Fatal("room.run() case clientJoin, json.Marshal: ", err)
 			}
 			clientJoin.sendBuff <- msgs
+
 		case clientLeave := <-room.leave:
 			_, clientExists := room.clients[clientLeave]
 			if clientExists {

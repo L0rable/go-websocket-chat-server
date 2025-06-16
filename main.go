@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/url"
+	"strconv"
 )
 
 func serveIndex(w http.ResponseWriter, r *http.Request) {
@@ -16,14 +18,38 @@ func serveIndex(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "landing.html")
 }
 
+func serveRoom(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/room" {
+		http.Error(w, "URL not found", http.StatusNotFound)
+	}
+	if r.Method != http.MethodGet {
+		http.Error(w, "HTTP method not allowed", http.StatusMethodNotAllowed)
+	}
+	http.ServeFile(w, r, "index.html")
+}
+
 func main() {
 	wRoom := newWaitingRoom()
 	go wRoom.run()
 
 	http.HandleFunc("/", serveIndex)
+	http.HandleFunc("/room", serveRoom)
 	http.HandleFunc("/ws", func(wr http.ResponseWriter, req *http.Request) {
-		log.Println("openWsReq")
-		// openWsReq(wRoom, wr, req)
+		conn, err := upgrader.Upgrade(wr, req, nil)
+		if err != nil {
+			log.Println("main.go - Websocket upgrade failed: ", err)
+			return
+		}
+
+		clientName := req.URL.Query().Get("clientName")
+		roomNo := req.URL.Query().Get("roomNo")
+		roomNoInt, err := strconv.Atoi(roomNo)
+		if err != nil {
+			log.Println("main.go - roomNoInt error: ", err)
+		}
+
+		joinReq := &JoinReq{ClientName: clientName, Room: roomNoInt}
+		wRoom.newJoin(wr, req, conn, joinReq)
 	})
 	http.HandleFunc("/join", func(wr http.ResponseWriter, req *http.Request) {
 		var joinReq *JoinReq
@@ -31,9 +57,14 @@ func main() {
 		err := decoder.Decode(&joinReq)
 		if err != nil {
 			http.Error(wr, "Bad request", http.StatusBadRequest)
-			return
+			log.Fatal("main.go - Bad http request: ")
 		}
-		newClient(wr, req, wRoom, joinReq)
+
+		clientName := joinReq.ClientName
+		roomNo := strconv.Itoa(joinReq.Room)
+		redirectURL := "/room?clientName=" + url.QueryEscape(clientName) + "&roomNo=" + url.QueryEscape(roomNo)
+
+		http.Redirect(wr, req, redirectURL, http.StatusSeeOther)
 	})
 
 	err := http.ListenAndServe(":8080", nil)

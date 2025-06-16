@@ -21,8 +21,12 @@ window.onload = function () {
     };
 
     if (window["WebSocket"]) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const clientName = urlParams.get("clientName");
+        const roomNo = urlParams.get("roomNo");
+
         // TODO: wss secure websocket connection
-        conn = new WebSocket("ws://" + document.location.host + "/ws");
+        conn = new WebSocket(`ws://${window.location.host}/ws?clientName=${clientName}&roomNo=${roomNo}`);
         conn.onopen = function (evt) {
             console.log("ws conn open");
             if (evt.data == 'null') {

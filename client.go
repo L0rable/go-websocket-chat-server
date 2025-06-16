@@ -1,9 +1,6 @@
 package main
 
 import (
-	"log"
-	"net/http"
-
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
@@ -61,33 +58,12 @@ func (c *Client) writePump() {
 	}
 }
 
-/*func openWsReq(wRoom *WaitingRoom, w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Fatal("upgrade err ", err)
-	}
-
+func newClient(clientName string, room *Room, conn *websocket.Conn) *Client {
 	id := uuid.New()
-	client := &Client{id: id.String(), name: "", room: nil, roomConn: conn, sendBuff: make(chan []byte, 256)}
-	client.room.join <- client
+	client := &Client{id: id.String(), name: clientName, room: room, roomConn: conn, sendBuff: make(chan []byte, 256)}
 
-	go client.waiting(wRoom)
 	go client.readPump()
 	go client.writePump()
-}*/
 
-func newClient(w http.ResponseWriter, r *http.Request, wRoom *WaitingRoom, joinMsg *JoinReq) {
-	id := uuid.New()
-	clientName := joinMsg.ClientName
-	roomNo := joinMsg.Room
-	client := &Client{id: id.String(), name: clientName, room: nil, roomConn: nil, sendBuff: make(chan []byte, 256)}
-
-	log.Println(joinMsg)
-
-	if clientName == "" || roomNo == 0 {
-		log.Println("Invalid client join req")
-		return
-	}
-
-	wRoom.joinRoom <- &JoinRoom{client, roomNo}
+	return client
 }
