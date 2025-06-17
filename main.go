@@ -11,11 +11,11 @@ import (
 func serveIndex(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.Error(w, "URL not found", http.StatusNotFound)
-		log.Fatal("URL not found: ", r.URL.Path, " (main.go, serveIndex()")
+		log.Fatal("URL not found: ", r.URL.Path, " (main.go, serveIndex())")
 	}
 	if r.Method != http.MethodGet {
 		http.Error(w, "HTTP method not allowed", http.StatusMethodNotAllowed)
-		log.Fatal("HTTP method not allowed: ", r.Method, " (main.go, serveIndex()")
+		log.Fatal("HTTP method not allowed: ", r.Method, " (main.go, serveIndex())")
 	}
 	http.ServeFile(w, r, "index.html")
 }
@@ -23,11 +23,11 @@ func serveIndex(w http.ResponseWriter, r *http.Request) {
 func serveRoom(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/room" {
 		http.Error(w, "URL not found", http.StatusNotFound)
-		log.Fatal("URL not found: ", r.URL.Path, " (main.go, serveIndex()")
+		log.Fatal("URL not found: ", r.URL.Path, " (main.go, serveIndex())")
 	}
 	if r.Method != http.MethodGet {
 		http.Error(w, "HTTP method not allowed", http.StatusMethodNotAllowed)
-		log.Fatal("HTTP method not allowed: ", r.Method, " (main.go, serveRoom()")
+		log.Fatal("HTTP method not allowed: ", r.Method, " (main.go, serveRoom())")
 	}
 	http.ServeFile(w, r, "room.html")
 }
@@ -62,7 +62,6 @@ func serveClientJoin(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	wRoom := newWaitingRoom()
-	go wRoom.run()
 
 	http.HandleFunc("/", serveIndex)
 	http.HandleFunc("/room", serveRoom)

@@ -11,7 +11,7 @@ import (
 var upgrader = websocket.Upgrader{}
 
 type Client struct {
-	id   string
+	id   uuid.UUID
 	name string
 	// ref to connected room
 	room *Room
@@ -40,7 +40,8 @@ func (c *Client) readPump() {
 		for {
 			_, msg, err := c.roomConn.ReadMessage()
 			if err != nil {
-				break
+				log.Println(err, "(client.go, readPump())")
+				// return
 			}
 			c.room.broadcast <- &Message{ClientName: c.name, Text: string(msg)}
 		}
@@ -52,7 +53,8 @@ func (c *Client) writePump() {
 		for message := range c.sendBuff {
 			w, err := c.roomConn.NextWriter(websocket.TextMessage)
 			if err != nil {
-				return
+				// log.Fatal("roomConn.Nextwriter(): ", err, " (client.go, writePump())")
+				log.Println("roomConn.Nextwriter(): ", err, " (client.go, writePump())")
 			}
 			// log.Println(string(message))
 			w.Write(message)
@@ -63,7 +65,8 @@ func (c *Client) writePump() {
 			}
 
 			if err := w.Close(); err != nil {
-				log.Fatal("Error, w.Close(): ", err, " (client.go, writePump())")
+				// log.Fatal("w.Close(): ", err, " (client.go, writePump())")
+				log.Println("w.Close(): ", err, " (client.go, writePump())")
 			}
 		}
 	}
@@ -72,7 +75,7 @@ func (c *Client) writePump() {
 func newClient(clientName string, room *Room, conn *websocket.Conn) *Client {
 	id := uuid.New()
 	client := &Client{
-		id:       id.String(),
+		id:       id,
 		name:     clientName,
 		room:     room,
 		roomConn: conn,
