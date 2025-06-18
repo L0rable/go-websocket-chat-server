@@ -6,7 +6,7 @@ import (
 )
 
 type WaitingRoom struct {
-	clients map[*Client]bool
+	clients map[string]*Client
 	rooms   map[int]*Room
 	// joinRoom  chan *JoinRoom
 	// leaveRoom chan int
@@ -14,12 +14,17 @@ type WaitingRoom struct {
 
 type JoinReq struct {
 	ClientName string `json:"clientName"`
-	Room       int    `json:"room"`
+	RoomNo     int    `json:"room"`
+}
+
+type LeaveReq struct {
+	ClientName string `json:"clientName"`
+	RoomNo     int    `json:"room"`
 }
 
 func newWaitingRoom() *WaitingRoom {
 	return &WaitingRoom{
-		clients: make(map[*Client]bool),
+		clients: make(map[string]*Client),
 		rooms:   make(map[int]*Room),
 		// joinRoom:  make(chan *JoinRoom),
 		// leaveRoom: make(chan int),
@@ -40,7 +45,7 @@ func (wRoom *WaitingRoom) checkJoinRoom(roomNo int) *Room {
 
 func (wRoom *WaitingRoom) newJoin(w http.ResponseWriter, r *http.Request, joinReq *JoinReq) {
 	clientName := joinReq.ClientName
-	roomNo := joinReq.Room
+	roomNo := joinReq.RoomNo
 	if clientName == "" || roomNo == 0 {
 		log.Fatal("Invalid client join req (client.go, newJoin())")
 	}
@@ -48,5 +53,6 @@ func (wRoom *WaitingRoom) newJoin(w http.ResponseWriter, r *http.Request, joinRe
 	conn := openWs(w, r)
 	room := wRoom.checkJoinRoom(roomNo)
 	newClient := newClient(clientName, room, conn)
+	wRoom.clients[newClient.name] = newClient
 	room.join <- newClient
 }

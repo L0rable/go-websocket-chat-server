@@ -49,7 +49,7 @@ func (room *Room) run() {
 			clientJoin.sendBuff <- msgs
 
 		case clientLeave := <-room.leave:
-			if room.clients[clientLeave.id] == nil {
+			if room.clients[clientLeave.id] != nil {
 				log.Println("client leave: ", clientLeave.name)
 				delete(room.clients, clientLeave.id)
 				close(clientLeave.sendBuff)

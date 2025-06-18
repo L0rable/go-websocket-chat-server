@@ -7,6 +7,12 @@ window.onload = function () {
     var conn
     var name = document.getElementById("user-name");
     var room = document.getElementById("chat-room-no");
+    const urlParams = new URLSearchParams(window.location.search);
+    const clientName = urlParams.get("clientName");
+
+    if (clientName != null) {
+        document.getElementById("user-info-clientName").innerHTML = "Name: " + clientName;
+    }
 
     document.getElementById("room-join-form").onsubmit = async function (e) {
         e.preventDefault();
@@ -106,7 +112,7 @@ html, body {
 </head>
 <body>
 <div class="user-info">
-    <p>Name:</p>
+    <p id="user-info-clientName">Name:</p>
     <p>UUID:</p>
 </div>
 <form id="room-join-form" class="room-join-container">
@@ -121,7 +127,7 @@ html, body {
         </label>
     </div>
     <div class="form-submit">
-        <input type="submit" value="Send" />
+        <input type="submit" value="Join" />
     </div>
 </form>
 </body>

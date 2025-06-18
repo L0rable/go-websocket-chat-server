@@ -32,16 +32,16 @@ func openWs(w http.ResponseWriter, r *http.Request) *websocket.Conn {
 func (c *Client) readPump() {
 	if c.room != nil {
 		defer func() {
-			c.room = nil
-			c.roomConn.Close()
 			c.room.leave <- c
+			c.roomConn.Close()
+			c.room = nil
 		}()
 
 		for {
 			_, msg, err := c.roomConn.ReadMessage()
 			if err != nil {
-				log.Println(err, "(client.go, readPump())")
-				// return
+				log.Println("roomConn.ReadMessage() ", err, " (client.go, readPump())")
+				return
 			}
 			c.room.broadcast <- &Message{ClientName: c.name, Text: string(msg)}
 		}

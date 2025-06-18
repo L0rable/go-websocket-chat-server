@@ -7,6 +7,7 @@ window.onload = function () {
     var conn;
     var msg = document.getElementById("msg");
     var msgLog = document.getElementById("msg-log");
+    var urlParams, clientName, roomNo;
 
     document.getElementById("msg-send-form").onsubmit = function () {
         if (!conn) {
@@ -20,10 +21,46 @@ window.onload = function () {
         return false;
     };
 
+    document.getElementById("leave-input").addEventListener("click", async function (e) {
+        e.preventDefault();
+
+        urlParams = new URLSearchParams(window.location.search);
+        clientName = urlParams.get("clientName");
+        roomNo = urlParams.get("roomNo");
+        if (!clientName || !roomNo) {
+            return false;
+        }
+
+        const leaveReqData = JSON.stringify({
+            clientName: clientName,
+            room: Number(roomNo),
+        });
+
+        try {
+            const leaveReq = await fetch('/leave', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: leaveReqData
+            });
+
+            if (!leaveReq.ok) {
+                throw new Error("Failed to leave chat room");
+            }
+
+            if (leaveReq.redirected) {
+                window.location.href = leaveReq.url;
+            }
+        } catch (err) {
+            console.error("Error:", err);
+        }
+    });
+
     if (window["WebSocket"]) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const clientName = urlParams.get("clientName");
-        const roomNo = urlParams.get("roomNo");
+        urlParams = new URLSearchParams(window.location.search);
+        clientName = urlParams.get("clientName");
+        roomNo = urlParams.get("roomNo");
 
         // TODO: wss secure websocket connection
         conn = new WebSocket(`ws://${window.location.host}/ws?clientName=${clientName}&roomNo=${roomNo}`);
@@ -94,7 +131,10 @@ body {
     overflow: auto;
 }
 
-#msg-send-form {
+.msg-send-container {
+    display: flex;
+    justify-content: flex-start;
+
     padding: 0 0.5em 0 0.5em;
     margin: 0;
     position: absolute;
@@ -104,13 +144,23 @@ body {
     overflow: hidden;
 }
 
+#leave-input {
+    margin-left: auto;
+    padding-right: 1em;
+}
+
 </style>
 </head>
 <body>
 <div id="msg-log"></div>
-<form id="msg-send-form">
-    <input type="submit" value="Send" />
-    <input type="text" id="msg" size="64" autofocus />
-</form>
+<div class="msg-send-container">
+    <form id="msg-send-form">
+        <input type="submit" value="Send" />
+        <input type="text" id="msg" size="64" autofocus />
+    </form>
+    <div id="leave-input">
+        <input type="button" value="Leave" />
+    </div>
+</div>
 </body>
 </html>
