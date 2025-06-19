@@ -6,13 +6,15 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/google/uuid"
 )
 
 func serveIndex(w http.ResponseWriter, r *http.Request) {
-	// if r.URL.Path != "/" {
-	// 	http.Error(w, "URL not found", http.StatusNotFound)
-	// 	log.Fatal("URL not found: ", r.URL.Path, " (main.go, serveIndex())")
-	// }
+	if r.URL.Path != "/" {
+		http.Error(w, "URL not found", http.StatusNotFound)
+		log.Fatal("URL not found: ", r.URL.Path, " (main.go, serveIndex())")
+	}
 	if r.Method != http.MethodGet {
 		http.Error(w, "HTTP method not allowed", http.StatusMethodNotAllowed)
 		log.Fatal("HTTP method not allowed: ", r.Method, " (main.go, serveIndex())")
@@ -33,14 +35,15 @@ func serveRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveClientWs(w http.ResponseWriter, r *http.Request, wRoom *WaitingRoom) {
+	clientId := r.URL.Query().Get("clientId")
 	clientName := r.URL.Query().Get("clientName")
 	roomNo := r.URL.Query().Get("roomNo")
 	roomNoInt, err := strconv.Atoi(roomNo)
 	if err != nil {
-		log.Fatal("roomNoInt error: ", err, " (main.go, /ws)")
+		log.Fatal("roomNoInt error: ", err, " (main.go, serveClientWs())")
 	}
 
-	joinReq := &JoinReq{ClientName: clientName, RoomNo: roomNoInt}
+	joinReq := &JoinReq{ClientId: clientId, ClientName: clientName, RoomNo: roomNoInt}
 	wRoom.newJoin(w, r, joinReq)
 }
 
@@ -50,12 +53,16 @@ func serveClientJoin(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&joinReq)
 	if err != nil {
 		http.Error(w, "Bad request", http.StatusBadRequest)
-		log.Fatal("Bad http request: ", err, " (main.go, /join)")
+		log.Fatal("Bad http request: ", err, " (main.go, serveClientJoin())")
 	}
 
+	clientId := url.QueryEscape(joinReq.ClientId)
+	if clientId == "" {
+		clientId = uuid.New().String()
+	}
 	clientName := url.QueryEscape(joinReq.ClientName)
 	roomNo := url.QueryEscape(strconv.Itoa(joinReq.RoomNo))
-	redirectURL := "/room?clientName=" + clientName + "&roomNo=" + roomNo
+	redirectURL := "/room?clientId=" + clientId + "&clientName=" + clientName + "&roomNo=" + roomNo
 
 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
@@ -66,12 +73,13 @@ func serveClientLeave(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&leaveReq)
 	if err != nil {
 		http.Error(w, "Bad request", http.StatusBadRequest)
-		log.Fatal("Bad http request: ", err, " (main.go, /join)")
+		log.Fatal("Bad http request: ", err, " (main.go, serveClientLeave())")
 	}
 
+	clientId := url.QueryEscape(leaveReq.ClientId)
 	clientName := url.QueryEscape(leaveReq.ClientName)
 	roomNo := url.QueryEscape(strconv.Itoa(leaveReq.RoomNo))
-	redirectURL := "/?clientName=" + clientName + "&roomNo=" + roomNo
+	redirectURL := "/?clientId=" + clientId + "&clientName=" + clientName + "&roomNo=" + roomNo
 
 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
@@ -92,6 +100,7 @@ func main() {
 	})
 
 	err := http.ListenAndServe(":8080", nil)
+	// log.Println("Go to localhost:8080 to access the chat application")
 	if err != nil {
 		log.Fatal("ListenAndServe", err)
 	}

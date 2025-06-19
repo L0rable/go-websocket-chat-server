@@ -8,19 +8,25 @@ window.onload = function () {
     var name = document.getElementById("user-name");
     var room = document.getElementById("chat-room-no");
     const urlParams = new URLSearchParams(window.location.search);
+    const clientId = urlParams.get("clientId");
     const clientName = urlParams.get("clientName");
 
+    if (clientId != null) {
+        document.getElementById("user-info-clientId").innerHTML = "UUID: " + clientId;
+    }
     if (clientName != null) {
         document.getElementById("user-info-clientName").innerHTML = "Name: " + clientName;
     }
 
     document.getElementById("room-join-form").onsubmit = async function (e) {
         e.preventDefault();
+        console.log(clientId);
         
         if (!name.value || !room.value) {
             return false;
         }
         const joinReqData = JSON.stringify({
+            clientId: clientId,
             clientName: name.value,
             room: Number(room.value),
         });
@@ -70,7 +76,7 @@ html, body {
     padding: 20px;
     margin: 16px;
     border-radius: 4px;
-    width: 300px;
+    width: 400px;
 
     box-sizing: border-box;
 }
@@ -112,8 +118,8 @@ html, body {
 </head>
 <body>
 <div class="user-info">
+    <p id="user-info-clientId">UUID:</p>
     <p id="user-info-clientName">Name:</p>
-    <p>UUID:</p>
 </div>
 <form id="room-join-form" class="room-join-container">
     <div class="form-input">

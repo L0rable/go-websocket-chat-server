@@ -4,14 +4,13 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{}
 
 type Client struct {
-	id   uuid.UUID
+	id   string
 	name string
 	// ref to connected room
 	room *Room
@@ -21,12 +20,16 @@ type Client struct {
 	sendBuff chan []byte
 }
 
-func openWs(w http.ResponseWriter, r *http.Request) *websocket.Conn {
+func (c *Client) openWs(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal("Websocket upgrade failed: ", err, " (client.go, openWs())")
 	}
-	return conn
+	c.roomConn = conn
+	c.sendBuff = make(chan []byte, 256)
+
+	go c.readPump()
+	go c.writePump()
 }
 
 func (c *Client) readPump() {
@@ -72,18 +75,13 @@ func (c *Client) writePump() {
 	}
 }
 
-func newClient(clientName string, room *Room, conn *websocket.Conn) *Client {
-	id := uuid.New()
+func newClient(id string, name string, room *Room) *Client {
 	client := &Client{
 		id:       id,
-		name:     clientName,
+		name:     name,
 		room:     room,
-		roomConn: conn,
-		sendBuff: make(chan []byte, 256),
+		roomConn: nil,
+		sendBuff: nil,
 	}
-
-	go client.readPump()
-	go client.writePump()
-
 	return client
 }

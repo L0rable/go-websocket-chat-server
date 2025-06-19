@@ -13,11 +13,13 @@ type WaitingRoom struct {
 }
 
 type JoinReq struct {
+	ClientId   string `json:"clientId"`
 	ClientName string `json:"clientName"`
 	RoomNo     int    `json:"room"`
 }
 
 type LeaveReq struct {
+	ClientId   string `json:"clientId"`
 	ClientName string `json:"clientName"`
 	RoomNo     int    `json:"room"`
 }
@@ -43,16 +45,31 @@ func (wRoom *WaitingRoom) checkJoinRoom(roomNo int) *Room {
 	return joinRoom
 }
 
+func (wRoom *WaitingRoom) checkJoinClient(id string, name string, room *Room) *Client {
+	var client *Client
+	if wRoom.clients[id] == nil {
+		client = newClient(id, name, room)
+		wRoom.clients[id] = client
+	} else {
+		client = wRoom.clients[id]
+		client.name = name
+		client.room = room
+	}
+	return client
+}
+
 func (wRoom *WaitingRoom) newJoin(w http.ResponseWriter, r *http.Request, joinReq *JoinReq) {
+	clientId := joinReq.ClientId
 	clientName := joinReq.ClientName
 	roomNo := joinReq.RoomNo
 	if clientName == "" || roomNo == 0 {
-		log.Fatal("Invalid client join req (client.go, newJoin())")
+		log.Fatal("Invalid client join req (waiting_room.go, newJoin())")
 	}
 
-	conn := openWs(w, r)
 	room := wRoom.checkJoinRoom(roomNo)
-	newClient := newClient(clientName, room, conn)
-	wRoom.clients[newClient.name] = newClient
-	room.join <- newClient
+	client := wRoom.checkJoinClient(clientId, clientName, room)
+	client.openWs(w, r)
+
+	wRoom.clients[client.name] = client
+	room.join <- client
 }

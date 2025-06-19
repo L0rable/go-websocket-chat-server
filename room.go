@@ -3,13 +3,11 @@ package main
 import (
 	"encoding/json"
 	"log"
-
-	"github.com/google/uuid"
 )
 
 type Room struct {
 	id        int
-	clients   map[uuid.UUID]*Client
+	clients   map[string]*Client
 	join      chan *Client
 	leave     chan *Client
 	broadcast chan *Message
@@ -24,7 +22,7 @@ type Message struct {
 func newRoom(roomNo int) *Room {
 	room := &Room{
 		id:        roomNo,
-		clients:   make(map[uuid.UUID]*Client),
+		clients:   make(map[string]*Client),
 		join:      make(chan *Client),
 		leave:     make(chan *Client),
 		broadcast: make(chan *Message),
@@ -41,7 +39,6 @@ func (room *Room) run() {
 		case clientJoin := <-room.join:
 			log.Println("client join:", clientJoin.name)
 			room.clients[clientJoin.id] = clientJoin
-
 			msgs, err := json.Marshal(room.messages)
 			if err != nil {
 				log.Fatal("json.Marshal:", err, "(room.go, run())")

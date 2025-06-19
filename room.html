@@ -25,6 +25,7 @@ window.onload = function () {
         e.preventDefault();
 
         urlParams = new URLSearchParams(window.location.search);
+        clientId = urlParams.get("clientId");
         clientName = urlParams.get("clientName");
         roomNo = urlParams.get("roomNo");
         if (!clientName || !roomNo) {
@@ -32,6 +33,7 @@ window.onload = function () {
         }
 
         const leaveReqData = JSON.stringify({
+            clientId: clientId,
             clientName: clientName,
             room: Number(roomNo),
         });
@@ -59,11 +61,12 @@ window.onload = function () {
 
     if (window["WebSocket"]) {
         urlParams = new URLSearchParams(window.location.search);
+        clientId = urlParams.get("clientId");
         clientName = urlParams.get("clientName");
         roomNo = urlParams.get("roomNo");
 
         // TODO: wss secure websocket connection
-        conn = new WebSocket(`ws://${window.location.host}/ws?clientName=${clientName}&roomNo=${roomNo}`);
+        conn = new WebSocket(`ws://${window.location.host}/ws?clientId=${clientId}&clientName=${clientName}&roomNo=${roomNo}`);
         conn.onopen = function (evt) {
             console.log("ws conn open");
             if (evt.data == 'null') {
