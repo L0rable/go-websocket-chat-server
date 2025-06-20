@@ -1,15 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
+	"net/url"
+	"strconv"
+
+	"github.com/google/uuid"
 )
 
 type WaitingRoom struct {
 	clients map[string]*Client
 	rooms   map[int]*Room
-	// joinRoom  chan *JoinRoom
-	// leaveRoom chan int
 }
 
 type ClientReq struct {
@@ -22,8 +25,6 @@ func newWaitingRoom() *WaitingRoom {
 	return &WaitingRoom{
 		clients: make(map[string]*Client),
 		rooms:   make(map[int]*Room),
-		// joinRoom:  make(chan *JoinRoom),
-		// leaveRoom: make(chan int),
 	}
 }
 
@@ -50,13 +51,37 @@ func (wRoom *WaitingRoom) checkJoinClient(id string, name string, room *Room) *C
 		client.name = name
 		client.room = room
 	}
+
 	return client
 }
 
-func (wRoom *WaitingRoom) newJoin(w http.ResponseWriter, r *http.Request, joinReq *ClientReq) {
-	clientId := joinReq.ClientId
-	clientName := joinReq.ClientName
-	roomNo := joinReq.RoomNo
+func (wRoom *WaitingRoom) handleJoinReq(w http.ResponseWriter, r *http.Request) string {
+	var joinReq *ClientReq
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&joinReq)
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		log.Fatal("Bad http request: ", err, " (main.go, serveClientJoin())")
+	}
+
+	clientId := url.QueryEscape(joinReq.ClientId)
+	if clientId == "" {
+		clientId = uuid.New().String()
+	}
+	clientName := url.QueryEscape(joinReq.ClientName)
+	roomNo := url.QueryEscape(strconv.Itoa(joinReq.RoomNo))
+	redirectURL := "/room?clientId=" + clientId + "&clientName=" + clientName + "&roomNo=" + roomNo
+
+	return redirectURL
+}
+
+func (wRoom *WaitingRoom) handleWsReq(w http.ResponseWriter, r *http.Request) {
+	clientId := r.URL.Query().Get("clientId")
+	clientName := r.URL.Query().Get("clientName")
+	roomNo, err := strconv.Atoi(r.URL.Query().Get("roomNo"))
+	if err != nil {
+		log.Fatal("roomNoInt error: ", err, " (main.go, serveClientWs())")
+	}
 	if clientName == "" || roomNo == 0 {
 		log.Fatal("Invalid client join req (waiting_room.go, newJoin())")
 	}
@@ -67,4 +92,21 @@ func (wRoom *WaitingRoom) newJoin(w http.ResponseWriter, r *http.Request, joinRe
 
 	wRoom.clients[client.name] = client
 	room.join <- client
+}
+
+func (wRoom *WaitingRoom) handleLeaveReq(w http.ResponseWriter, r *http.Request) string {
+	var leaveReq *ClientReq
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&leaveReq)
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		log.Fatal("Bad http request: ", err, " (main.go, serveClientLeave())")
+	}
+
+	clientId := url.QueryEscape(leaveReq.ClientId)
+	clientName := url.QueryEscape(leaveReq.ClientName)
+	roomNo := url.QueryEscape(strconv.Itoa(leaveReq.RoomNo))
+	redirectURL := "/?clientId=" + clientId + "&clientName=" + clientName + "&roomNo=" + roomNo
+
+	return redirectURL
 }

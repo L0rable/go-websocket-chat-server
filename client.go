@@ -52,10 +52,8 @@ func (c *Client) writePump() {
 		for message := range c.sendBuff {
 			w, err := c.roomConn.NextWriter(websocket.TextMessage)
 			if err != nil {
-				// log.Fatal("roomConn.Nextwriter(): ", err, " (client.go, writePump())")
 				log.Println("roomConn.Nextwriter(): ", err, " (client.go, writePump())")
 			}
-			// log.Println(string(message))
 			w.Write(message)
 
 			n := len(c.sendBuff)
@@ -64,7 +62,6 @@ func (c *Client) writePump() {
 			}
 
 			if err := w.Close(); err != nil {
-				// log.Fatal("w.Close(): ", err, " (client.go, writePump())")
 				log.Println("w.Close(): ", err, " (client.go, writePump())")
 			}
 		}
