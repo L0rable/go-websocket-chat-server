@@ -12,13 +12,7 @@ type WaitingRoom struct {
 	// leaveRoom chan int
 }
 
-type JoinReq struct {
-	ClientId   string `json:"clientId"`
-	ClientName string `json:"clientName"`
-	RoomNo     int    `json:"room"`
-}
-
-type LeaveReq struct {
+type ClientReq struct {
 	ClientId   string `json:"clientId"`
 	ClientName string `json:"clientName"`
 	RoomNo     int    `json:"room"`
@@ -37,6 +31,7 @@ func (wRoom *WaitingRoom) checkJoinRoom(roomNo int) *Room {
 	var joinRoom *Room
 	if wRoom.rooms[roomNo] == nil {
 		joinRoom = newRoom(roomNo)
+		go joinRoom.run()
 	} else {
 		joinRoom = wRoom.rooms[roomNo]
 	}
@@ -58,7 +53,7 @@ func (wRoom *WaitingRoom) checkJoinClient(id string, name string, room *Room) *C
 	return client
 }
 
-func (wRoom *WaitingRoom) newJoin(w http.ResponseWriter, r *http.Request, joinReq *JoinReq) {
+func (wRoom *WaitingRoom) newJoin(w http.ResponseWriter, r *http.Request, joinReq *ClientReq) {
 	clientId := joinReq.ClientId
 	clientName := joinReq.ClientName
 	roomNo := joinReq.RoomNo

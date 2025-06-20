@@ -10,26 +10,22 @@ import (
 var upgrader = websocket.Upgrader{}
 
 type Client struct {
-	id   string
-	name string
-	// ref to connected room
-	room *Room
-	// client websocket connection to room
+	id       string
+	name     string
+	room     *Room
 	roomConn *websocket.Conn
-	// message buffer channel, send to room
 	sendBuff chan []byte
 }
 
-func (c *Client) openWs(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Fatal("Websocket upgrade failed: ", err, " (client.go, openWs())")
+func newClient(id string, name string, room *Room) *Client {
+	client := &Client{
+		id:       id,
+		name:     name,
+		room:     room,
+		roomConn: nil,
+		sendBuff: nil,
 	}
-	c.roomConn = conn
-	c.sendBuff = make(chan []byte, 256)
-
-	go c.readPump()
-	go c.writePump()
+	return client
 }
 
 func (c *Client) readPump() {
@@ -75,13 +71,14 @@ func (c *Client) writePump() {
 	}
 }
 
-func newClient(id string, name string, room *Room) *Client {
-	client := &Client{
-		id:       id,
-		name:     name,
-		room:     room,
-		roomConn: nil,
-		sendBuff: nil,
+func (c *Client) openWs(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Fatal("Websocket upgrade failed: ", err, " (client.go, openWs())")
 	}
-	return client
+	c.roomConn = conn
+	c.sendBuff = make(chan []byte, 256)
+
+	go c.readPump()
+	go c.writePump()
 }

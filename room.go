@@ -27,9 +27,6 @@ func newRoom(roomNo int) *Room {
 		leave:     make(chan *Client),
 		broadcast: make(chan *Message),
 	}
-
-	go room.run()
-
 	return room
 }
 

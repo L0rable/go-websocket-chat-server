@@ -43,12 +43,12 @@ func serveClientWs(w http.ResponseWriter, r *http.Request, wRoom *WaitingRoom) {
 		log.Fatal("roomNoInt error: ", err, " (main.go, serveClientWs())")
 	}
 
-	joinReq := &JoinReq{ClientId: clientId, ClientName: clientName, RoomNo: roomNoInt}
+	joinReq := &ClientReq{ClientId: clientId, ClientName: clientName, RoomNo: roomNoInt}
 	wRoom.newJoin(w, r, joinReq)
 }
 
 func serveClientJoin(w http.ResponseWriter, r *http.Request) {
-	var joinReq *JoinReq
+	var joinReq *ClientReq
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&joinReq)
 	if err != nil {
@@ -68,7 +68,7 @@ func serveClientJoin(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveClientLeave(w http.ResponseWriter, r *http.Request) {
-	var leaveReq *LeaveReq
+	var leaveReq *ClientReq
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&leaveReq)
 	if err != nil {
@@ -100,7 +100,6 @@ func main() {
 	})
 
 	err := http.ListenAndServe(":8080", nil)
-	// log.Println("Go to localhost:8080 to access the chat application")
 	if err != nil {
 		log.Fatal("ListenAndServe", err)
 	}
