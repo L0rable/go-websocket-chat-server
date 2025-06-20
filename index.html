@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Landing Page</title>
+<title>Lobby Room</title>
 <script type="text/javascript">
 window.onload = function () {
-    var conn
-    var name = document.getElementById("user-name");
-    var room = document.getElementById("chat-room-no");
+    const name = document.getElementById("user-name");
+    const room = document.getElementById("chat-room-no");
+
     const urlParams = new URLSearchParams(window.location.search);
     const clientId = urlParams.get("clientId");
     const clientName = urlParams.get("clientName");
@@ -20,7 +20,6 @@ window.onload = function () {
 
     document.getElementById("room-join-form").onsubmit = async function (e) {
         e.preventDefault();
-        console.log(clientId);
         
         if (!name.value || !room.value) {
             return false;
