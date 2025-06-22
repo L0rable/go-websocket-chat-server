@@ -6,7 +6,7 @@ import (
 )
 
 func serveIndex(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "" {
+	if r.URL.Path != "/" {
 		http.Error(w, "URL not found", http.StatusNotFound)
 		log.Fatal("URL not found: ", r.URL.Path, " (main.go, serveIndex())")
 	}
@@ -46,7 +46,8 @@ func main() {
 		wRoom.handleWsReq(w, r)
 	})
 
-	err := http.ListenAndServe(":8080", nil)
+	log.Println("About to listen on 8080. Go to https://localhost:8080/")
+	err := http.ListenAndServeTLS(":8080", "tls/server.crt", "tls/server.key", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe", err)
 	}

@@ -66,8 +66,7 @@ window.onload = function () {
     });
 
     if (window["WebSocket"]) {
-        // TODO: wss secure websocket connection
-        conn = new WebSocket(`ws://${window.location.host}/ws?clientId=${clientId}&clientName=${clientName}&roomNo=${roomNo}`);
+        conn = new WebSocket(`wss://${window.location.host}/ws?clientId=${clientId}&clientName=${clientName}&roomNo=${roomNo}`);
         conn.onopen = function (evt) {
             console.log("ws conn open");
             if (evt.data == 'null') {
