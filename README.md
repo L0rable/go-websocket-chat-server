@@ -1,13 +1,16 @@
 # Go WebSocket Chat Server
-Goal: Build a web socket chat server with a simple front end
-Functionality of the server:
+Simple Go server Chat server with a simple front end. Use of Websockets to send messages to rooms.
+<br>
+Features:
 * Server contains a bunch of rooms for clients to join and leave
 * Clients can join, write messages and leave the rooms
 * Room session state is retained until server is stopped
-* Currently runs locally on machine
 
-![alt text](lobby.png)
-![alt text](room.png)
+![alt text](images/lobby.png)
+![alt text](images/room.png)
+
+## Architecture diagram
+![alt text](images/diagram.png)
 
 ## Setup
 Run the following commands to create and sign the certficate
