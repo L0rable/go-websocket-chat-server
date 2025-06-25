@@ -1,8 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<title>Room</title>
-<script type="text/javascript">
 window.onload = function () {
     var conn;
     const msg = document.getElementById("msg");
@@ -107,63 +102,3 @@ window.onload = function () {
         msgLog.appendChild(item);
     }
 };
-</script>
-<style type="text/css">
-html {
-    overflow: hidden;
-}
-
-body {
-    overflow: hidden;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    background: gray;
-}
-
-#msg-log {
-    background: white;
-    margin: 0;
-    padding: 0.5em 0.5em 0.5em 0.5em;
-    position: absolute;
-    top: 0.5em;
-    left: 0.5em;
-    right: 0.5em;
-    bottom: 3em;
-    overflow: auto;
-}
-
-.msg-send-container {
-    display: flex;
-    justify-content: flex-start;
-
-    padding: 0 0.5em 0 0.5em;
-    margin: 0;
-    position: absolute;
-    bottom: 1em;
-    left: 0px;
-    width: 100%;
-    overflow: hidden;
-}
-
-#leave-input {
-    margin-left: auto;
-    padding-right: 1em;
-}
-
-</style>
-</head>
-<body>
-<div id="msg-log"></div>
-<div class="msg-send-container">
-    <form id="msg-send-form">
-        <input type="submit" value="Send" />
-        <input type="text" id="msg" size="64" autofocus />
-    </form>
-    <div id="leave-input">
-        <input type="button" value="Leave" />
-    </div>
-</div>
-</body>
-</html>

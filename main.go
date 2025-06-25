@@ -14,7 +14,7 @@ func serveIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "HTTP method not allowed", http.StatusMethodNotAllowed)
 		log.Fatal("HTTP method not allowed: ", r.Method, " (main.go, serveIndex())")
 	}
-	http.ServeFile(w, r, "index.html")
+	http.ServeFile(w, r, "client/index.html")
 }
 
 func serveRoom(w http.ResponseWriter, r *http.Request) {
@@ -26,11 +26,14 @@ func serveRoom(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "HTTP method not allowed", http.StatusMethodNotAllowed)
 		log.Fatal("HTTP method not allowed: ", r.Method, " (main.go, serveRoom())")
 	}
-	http.ServeFile(w, r, "room.html")
+	http.ServeFile(w, r, "client/room.html")
 }
 
 func main() {
 	wRoom := newWaitingRoom()
+
+	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("client/css"))))
+	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("client/js"))))
 
 	http.HandleFunc("/", serveIndex)
 	http.HandleFunc("/room", serveRoom)
