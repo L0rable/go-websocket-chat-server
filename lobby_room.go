@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type WaitingRoom struct {
+type LobbyRoom struct {
 	clients map[string]*Client
 	rooms   map[int]*Room
 }
@@ -21,14 +21,14 @@ type ClientReq struct {
 	RoomNo     int    `json:"room"`
 }
 
-func newWaitingRoom() *WaitingRoom {
-	return &WaitingRoom{
+func newLobbyRoom() *LobbyRoom {
+	return &LobbyRoom{
 		clients: make(map[string]*Client),
 		rooms:   make(map[int]*Room),
 	}
 }
 
-func (wRoom *WaitingRoom) checkJoinRoom(roomNo int) *Room {
+func (wRoom *LobbyRoom) checkJoinRoom(roomNo int) *Room {
 	var joinRoom *Room
 	if wRoom.rooms[roomNo] == nil {
 		joinRoom = newRoom(roomNo)
@@ -41,7 +41,7 @@ func (wRoom *WaitingRoom) checkJoinRoom(roomNo int) *Room {
 	return joinRoom
 }
 
-func (wRoom *WaitingRoom) checkJoinClient(id string, name string, room *Room) *Client {
+func (wRoom *LobbyRoom) checkJoinClient(id string, name string, room *Room) *Client {
 	var client *Client
 	if wRoom.clients[id] == nil {
 		client = newClient(id, name, room)
@@ -55,7 +55,7 @@ func (wRoom *WaitingRoom) checkJoinClient(id string, name string, room *Room) *C
 	return client
 }
 
-func (wRoom *WaitingRoom) handleJoinReq(w http.ResponseWriter, r *http.Request) string {
+func (wRoom *LobbyRoom) handleJoinReq(w http.ResponseWriter, r *http.Request) string {
 	var joinReq *ClientReq
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&joinReq)
@@ -75,7 +75,7 @@ func (wRoom *WaitingRoom) handleJoinReq(w http.ResponseWriter, r *http.Request) 
 	return redirectURL
 }
 
-func (wRoom *WaitingRoom) handleWsReq(w http.ResponseWriter, r *http.Request) {
+func (wRoom *LobbyRoom) handleWsReq(w http.ResponseWriter, r *http.Request) {
 	clientId := r.URL.Query().Get("clientId")
 	clientName := r.URL.Query().Get("clientName")
 	roomNo, err := strconv.Atoi(r.URL.Query().Get("roomNo"))
@@ -94,7 +94,7 @@ func (wRoom *WaitingRoom) handleWsReq(w http.ResponseWriter, r *http.Request) {
 	room.join <- client
 }
 
-func (wRoom *WaitingRoom) handleLeaveReq(w http.ResponseWriter, r *http.Request) string {
+func (wRoom *LobbyRoom) handleLeaveReq(w http.ResponseWriter, r *http.Request) string {
 	var leaveReq *ClientReq
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&leaveReq)

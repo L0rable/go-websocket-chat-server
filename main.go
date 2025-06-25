@@ -30,7 +30,7 @@ func serveRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	wRoom := newWaitingRoom()
+	lobbyRoom := newLobbyRoom()
 
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("client/css"))))
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("client/js"))))
@@ -38,15 +38,15 @@ func main() {
 	http.HandleFunc("/", serveIndex)
 	http.HandleFunc("/room", serveRoom)
 	http.HandleFunc("/join", func(w http.ResponseWriter, r *http.Request) {
-		redirectURL := wRoom.handleJoinReq(w, r)
+		redirectURL := lobbyRoom.handleJoinReq(w, r)
 		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 	})
 	http.HandleFunc("/leave", func(w http.ResponseWriter, r *http.Request) {
-		redirectURL := wRoom.handleLeaveReq(w, r)
+		redirectURL := lobbyRoom.handleLeaveReq(w, r)
 		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 	})
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		wRoom.handleWsReq(w, r)
+		lobbyRoom.handleWsReq(w, r)
 	})
 
 	log.Println("About to listen on 8080. Go to https://localhost:8080/")
